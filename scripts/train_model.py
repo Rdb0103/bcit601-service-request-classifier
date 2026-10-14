@@ -1,4 +1,5 @@
 import pandas as pd
+import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -50,3 +51,29 @@ print(classification_report(
 ))
 
 print("Accuracy:", round(accuracy * 100, 2), "%")
+
+
+# Test five example service requests
+new_requests = [
+    "The pothole outside my house is getting massive lol",
+    "My rubbish bin has been sitting there for 3 days and nobody took it",
+    "There is water leaking everywhere down the street",
+    "The streetlight is broken and its really dark at night",
+    "Someone has dumped a whole couch on the footpath for some reason"
+]
+
+new_requests_tfidf = vectoriser.transform(new_requests)
+new_predictions = model.predict(new_requests_tfidf)
+
+print("\nExample Predictions:")
+
+for request, prediction in zip(new_requests, new_predictions):
+    print("Request:", request)
+    print("Predicted category:", prediction)
+    print()
+
+# Save the trained model and vectoriser
+joblib.dump(model, "./model/service_request_model.pkl")
+joblib.dump(vectoriser, "./model/tfidf_vectoriser.pkl")
+
+print("Model and vectoriser saved successfully.")

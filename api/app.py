@@ -30,3 +30,15 @@ app = FastAPI(
     title="Council Service Request Classifier",
     lifespan=lifespan
 )
+
+# Check whether the API is running
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+# Return the categories the model can predict
+@app.get("/categories")
+def get_categories():
+    categories = artefacts["model"].classes_.tolist()
+    return {"categories": categories}

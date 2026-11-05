@@ -1,9 +1,8 @@
-from flask import Flask, request, jsonify
-import joblib
 from pathlib import Path
+from contextlib import asynccontextmanager
 
-# Create the Flask application
-app = Flask(__name__)
+import joblib
+from fastapi import FastAPI
 
 # Find the main project folder
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,6 +11,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "model" / "service_request_model.pkl"
 VECTORIZER_PATH = BASE_DIR / "model" / "tfidf_vectoriser.pkl"
 
-# Load the saved model and vectoriser
-model = joblib.load(MODEL_PATH)
-vectoriser = joblib.load(VECTORIZER_PATH)
+
+# Store the loaded model and vectoriser
+artefacts = {}
+
+
+# Load the model and vectoriser when the API starts
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    artefacts["model"] = joblib.load(MODEL_PATH)
+    artefacts["vectoriser"] = joblib.load(VECTORIZER_PATH)
+    yield
+    artefacts.clear()
+
+
+# Create the FastAPI application
+app = FastAPI(
+    title="Council Service Request Classifier",
+    lifespan=lifespan
+)

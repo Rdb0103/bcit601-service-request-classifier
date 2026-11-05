@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.naive_bayes import MultinomialNB
 
 # Load the cleaned dataset
 df = pd.read_csv("./data/processed/service_requests_clean.csv")
@@ -25,7 +26,7 @@ vectoriser = TfidfVectorizer()
 X_train_tfidf = vectoriser.fit_transform(X_train)
 X_test_tfidf = vectoriser.transform(X_test)
 
-# Train the classification model
+# Train the Logistic Regression classification model
 model = LogisticRegression(max_iter=1000)
 model.fit(X_train_tfidf, y_train)
 
@@ -52,6 +53,32 @@ print(classification_report(
 
 print("Accuracy:", round(accuracy * 100, 2), "%")
 
+# Experiment with Multinomial Naive Bayes
+# I am testing Naive Bayes as an alternative to Logistic Regression.
+# It estimates which category a request belongs to based on its words.
+# I will compare both models to see which performs better.
+
+nb_model = MultinomialNB()
+nb_model.fit(X_train_tfidf, y_train)
+
+# Make predictions using Naive Bayes
+nb_predictions = nb_model.predict(X_test_tfidf)
+
+# Evaluate Naive Bayes
+nb_accuracy = accuracy_score(y_test, nb_predictions)
+
+print("\nNaive Bayes Classification Report:")
+print(classification_report(
+    y_test, nb_predictions, zero_division=0
+))
+
+print("Naive Bayes Accuracy:", round(nb_accuracy * 100, 2), "%")
+
+# Compare both models
+print("\nModel Comparison:")
+print("Logistic Regression:", round(accuracy * 100, 2), "%")
+print("Multinomial Naive Bayes:", round(nb_accuracy * 100, 2), "%")
+
 
 # Test five example service requests
 new_requests = [
@@ -65,11 +92,18 @@ new_requests = [
 new_requests_tfidf = vectoriser.transform(new_requests)
 new_predictions = model.predict(new_requests_tfidf)
 
+# Get the confidence scores for each prediction
+new_probabilities = model.predict_proba(new_requests_tfidf)
+
+# Find the highest probability for each prediction
+confidence_scores = new_probabilities.max(axis=1)
+
 print("\nExample Predictions:")
 
-for request, prediction in zip(new_requests, new_predictions):
+for request, prediction, confidence in zip(new_requests, new_predictions, confidence_scores):
     print("Request:", request)
     print("Predicted category:", prediction)
+    print("Confidence:", round(confidence * 100, 2), "%")
     print()
 
 # Save the trained model and vectoriser
@@ -77,3 +111,17 @@ joblib.dump(model, "./model/service_request_model.pkl")
 joblib.dump(vectoriser, "./model/tfidf_vectoriser.pkl")
 
 print("Model and vectoriser saved successfully.")
+
+# Test that I can reload the saved model and vectoriser
+loaded_model = joblib.load("./model/service_request_model.pkl")
+loaded_vectoriser = joblib.load("./model/tfidf_vectoriser.pkl")
+
+# Test a prediction using the reloaded files
+test_request = ["There is a large pothole on the road"]
+
+test_features = loaded_vectoriser.transform(test_request)
+test_prediction = loaded_model.predict(test_features)
+
+print("\nSaved Model Reload Test:")
+print("Request:", test_request[0])
+print("Prediction:", test_prediction[0])

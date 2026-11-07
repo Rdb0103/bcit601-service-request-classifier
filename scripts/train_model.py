@@ -98,13 +98,18 @@ new_probabilities = model.predict_proba(new_requests_tfidf)
 # Find the highest probability for each prediction
 confidence_scores = new_probabilities.max(axis=1)
 
-print("\nExample Predictions:")
+# Display the five example predictions in a formatted table
+print("\nFIVE EXAMPLE PREDICTIONS")
+print("=" * 100)
+print(f"{'INPUT TEXT':<55} {'PREDICTED':<15} {'CONFIDENCE':>12}")
+print("-" * 100)
 
-for request, prediction, confidence in zip(new_requests, new_predictions, confidence_scores):
-    print("Request:", request)
-    print("Predicted category:", prediction)
-    print("Confidence:", round(confidence * 100, 2), "%")
-    print()
+for request, prediction, confidence in zip(
+    new_requests, new_predictions, confidence_scores
+):
+    print(f"{request[:52]:<55} {prediction:<15} {confidence * 100:>10.2f}%")
+
+print("=" * 100)
 
 # Save the trained model and vectoriser
 joblib.dump(model, "./model/service_request_model.pkl")

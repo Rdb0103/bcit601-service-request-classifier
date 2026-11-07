@@ -40,3 +40,20 @@ def test_predict_rejects_missing_text():
     with TestClient(app) as client:
         response = client.post("/predict", json={})
         assert response.status_code == 422
+
+def test_predict_rejects_blank_text():
+    with TestClient(app) as client:
+        response = client.post(
+            "/predict",
+            json={"text": "   "}
+        )
+        assert response.status_code == 422
+
+
+def test_predict_rejects_text_over_2000_characters():
+    with TestClient(app) as client:
+        response = client.post(
+            "/predict",
+            json={"text": "a" * 2001}
+        )
+        assert response.status_code == 422
